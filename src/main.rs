@@ -1,5 +1,3 @@
-use std::time::SystemTime;
-
 use actix_cors::Cors;
 use actix_web::web::Html;
 use actix_web::{get, middleware, route, web, App, HttpResponse, HttpServer, Responder};
