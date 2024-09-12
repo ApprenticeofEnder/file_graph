@@ -737,6 +737,7 @@ dependencies = [
  "actix-cors",
  "actix-web",
  "actix-web-lab",
+ "base64 0.22.1",
  "env_logger",
  "juniper",
  "log",
