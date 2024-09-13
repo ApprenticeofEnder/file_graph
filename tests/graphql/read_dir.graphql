@@ -1,0 +1,13 @@
+query ReadDir($path: String!) {
+  readDir(path: $path) {
+    error
+    data {
+      fileName
+      path
+      metadata {
+        fileType
+        sizeKb
+      }
+    }
+  }
+}

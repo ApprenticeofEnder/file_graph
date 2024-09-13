@@ -1,6 +1,8 @@
-use std::{future::Future, panic, pin::Pin, sync::Once};
+use std::sync::{Once, OnceLock};
 
+use actix_web::dev::ServerHandle;
 use file_graph::{init_logger, init_server};
+use reqwest::RequestBuilder;
 use rstest::*;
 
 static INIT: Once = Once::new();
@@ -11,31 +13,31 @@ pub fn setup() -> () {
     });
 }
 
-pub fn run_test<T>(test: T) -> ()
-where
-    T: panic::UnwindSafe,
-    T: FnOnce() -> Pin<Box<dyn Future<Output = ()> + 'static + Send>>,
-{
-    let result = std::panic::catch_unwind(|| {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async {
-                // spawning an app now returns a tuple so we can move `test_app` into the test
-                // function while keeping everything we need to later delete the database
+#[fixture]
+pub async fn test_server() -> &'static ServerHandle {
+    static SERVER: OnceLock<ServerHandle> = OnceLock::new();
+    // SERVER.get_or_init(|| {
+    //     let server = init_test_server();
+    //     thread::sleep(Duration::from_secs(1));
+    //     println!("Thread started.");
+    //     server
+    // })
+    SERVER.get_or_init(|| {
+        init_logger();
 
-                let server = init_server().unwrap();
+        let server = init_server().unwrap();
+        let server_handler = server.handle();
+        let server_spawner = Box::new(server);
+        tokio::spawn(async move {
+            server_spawner.await.unwrap();
+        });
+        server_handler
+    })
+}
 
-                let server_handler = server.handle();
-                let server_spawner = Box::new(server);
-                tokio::spawn(async move {
-                    server_spawner.await.unwrap();
-                });
-                // run some tests on the newly started app !
-                test().await;
-                server_handler.stop(true).await;
-            })
-    });
-    assert!(result.is_ok());
+#[fixture]
+pub fn req() -> RequestBuilder {
+    let client = reqwest::Client::new();
+    let res = client.post("http://localhost:8080/graphql");
+    res
 }

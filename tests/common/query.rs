@@ -1,6 +1,4 @@
 use graphql_client::GraphQLQuery;
-// use reqwest;
-// use rstest::*;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -9,3 +7,19 @@ use graphql_client::GraphQLQuery;
     response_derives = "Debug"
 )]
 pub struct Ping;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "tests/graphql/schema.graphql",
+    query_path = "tests/graphql/read_file.graphql",
+    response_derives = "Debug"
+)]
+pub struct ReadFile;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "tests/graphql/schema.graphql",
+    query_path = "tests/graphql/read_dir.graphql",
+    response_derives = "Debug"
+)]
+pub struct ReadDir;

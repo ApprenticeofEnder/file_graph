@@ -1,0 +1,6 @@
+query ReadFile($path: String!) {
+  readFile(path: $path) {
+    name
+    path
+  }
+}
