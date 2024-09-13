@@ -4,7 +4,7 @@ use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 use juniper::{GraphQLEnum, GraphQLObject};
 use num::ToPrimitive;
 
-fn osstring_to_string(path: &OsString) -> String {
+pub fn osstring_to_string(path: &OsString) -> String {
     return path.to_string_lossy().into_owned();
 }
 

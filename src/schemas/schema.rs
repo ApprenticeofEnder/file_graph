@@ -1,4 +1,4 @@
-use std::fs;
+use std::{env, fs};
 
 use juniper::{
     graphql_value, EmptyMutation, EmptySubscription, FieldError, FieldResult, GraphQLObject,
@@ -7,6 +7,8 @@ use juniper::{
 
 use crate::schemas::dto::GqlDirentDTO;
 use crate::schemas::fs::GqlFile;
+
+use super::fs::osstring_to_string;
 
 #[derive(GraphQLObject)]
 #[graphql(description = "Ping")]
@@ -50,6 +52,20 @@ impl QueryRoot {
             }
         };
         Ok(file)
+    }
+
+    fn read_home() -> FieldResult<Vec<GqlDirentDTO>> {
+        let home_dir: String = match home::home_dir() {
+            Some(dir) => osstring_to_string(&dir.as_os_str().to_os_string()),
+            None => {
+                let err = FieldError::new(
+                    format!("Could not retrieve home directory."),
+                    graphql_value!({"error": "Directory not found"}),
+                );
+                return Err(err);
+            }
+        };
+        Self::read_dir(home_dir)
     }
 }
 

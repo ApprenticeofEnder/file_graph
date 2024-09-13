@@ -1,0 +1,11 @@
+query ReadHome {
+  readHome {
+    error
+    data {
+      fileName
+      metadata {
+        fileType
+      }
+    }
+  }
+}
