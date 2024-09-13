@@ -3,12 +3,14 @@ import { NodeObject, LinkObject } from "react-force-graph-2d";
 
 function genRandomTree(N = 10, reverse = false) {
   return {
-    nodes: [...Array(N).keys()].map((i) => ({ id: i, filename: "test" })),
+    nodes: [...Array(N).keys()].map((i) => ({ id: `${i}`, filename: "test" })),
     links: [...Array(N).keys()]
       .filter((id) => id)
       .map((id) => ({
-        [reverse ? "target" : "source"]: id,
-        [reverse ? "source" : "target"]: Math.round(Math.random() * (id - 1)),
+        [reverse ? "target" : "source"]: `${id}`,
+        [reverse ? "source" : "target"]: `${Math.round(
+          Math.random() * (id - 1)
+        )}`,
       })),
   };
 }
