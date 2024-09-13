@@ -1,0 +1,52 @@
+schema {
+  query: QueryRoot
+}
+
+enum GqlFileType {
+  FILE
+  DIRECTORY
+  SYMLINK
+  UNSUPPORTED
+}
+
+"Dirent"
+type GqlDirent {
+  path: String!
+  metadata: GqlFileMetadata
+  fileName: String!
+}
+
+"Dirent DTO"
+type GqlDirentDTO {
+  data: GqlDirent
+  error: String
+}
+
+"Dirent"
+type GqlFile {
+  contents: String!
+  name: String!
+  metadata: GqlFileMetadata
+  path: String!
+}
+
+"Metadata"
+type GqlFileMetadata {
+  fileType: GqlFileType!
+  sizeKb: Int!
+  readOnly: Boolean!
+  modified: Float!
+  accessed: Float!
+  created: Float!
+}
+
+"Ping"
+type Ping {
+  pong: String!
+}
+
+type QueryRoot {
+  ping: Ping!
+  readDir(path: String!): [GqlDirentDTO!]!
+  readFile(path: String!): GqlFile!
+}

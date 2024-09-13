@@ -9,7 +9,16 @@ actix-web = { version = "4.9.0", features = ["secure-cookies"] }
 actix-web-lab = "0.22.0"
 base64 = "0.22.1"
 env_logger = "0.11.5"
-juniper = "0.16.1"
+juniper = { version = "0.16.1", features = ["schema-language"]}
 log = "0.4.22"
 num = "0.4.3"
 tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread", "macros"] }
+async-std = { version = "1.5", features = ["attributes"] }
+serde = "1.0.210"
+serde_json = "1.0.128"
+reqwest = { version = "0.12.7", features = ["json"] }
+
+[dev-dependencies]
+graphql_client = "0.14.0"
+reqwest = "0.12.7"
+rstest = "0.22.0"
