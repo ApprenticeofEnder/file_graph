@@ -25,7 +25,7 @@ async fn graphql(st: web::Data<Schema>, data: web::Json<GraphQLRequest>) -> impl
     HttpResponse::Ok().json(user)
 }
 
-pub fn init_logger() -> () {
+pub fn init_logger() {
     let env = env_logger::Env::new().default_filter_or("info");
     env_logger::init_from_env(env);
 }

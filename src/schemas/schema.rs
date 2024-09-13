@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::fs;
 
 use juniper::{
     graphql_value, EmptyMutation, EmptySubscription, FieldError, FieldResult, GraphQLObject,
@@ -29,14 +29,14 @@ impl QueryRoot {
         let dir = match fs::read_dir(path) {
             Ok(dir) => dir,
             Err(err) => {
-                let err = FieldError::new(
-                    format!("Could not retrieve directory: {}.", err.to_string()),
+                let error = FieldError::new(
+                    format!("Could not retrieve directory: {}.", err),
                     graphql_value!({"error": "Directory not found"}),
                 );
-                return Err(err);
+                return Err(error);
             }
         };
-        let entries: Vec<GqlDirentDTO> = dir.map(|dirent| GqlDirentDTO::from(dirent)).collect();
+        let entries: Vec<GqlDirentDTO> = dir.map(GqlDirentDTO::from).collect();
         Ok(entries)
     }
 
@@ -45,7 +45,7 @@ impl QueryRoot {
             Ok(file) => file,
             Err(err) => {
                 let err = FieldError::new(
-                    format!("Could not retrieve file: {}.", err.to_string()),
+                    format!("Could not retrieve file: {}.", err),
                     graphql_value!({"error": "File not found"}),
                 );
                 return Err(err);
@@ -59,7 +59,7 @@ impl QueryRoot {
             Some(dir) => osstring_to_string(&dir.as_os_str().to_os_string()),
             None => {
                 let err = FieldError::new(
-                    format!("Could not retrieve home directory."),
+                    "Could not retrieve home directory.".to_string(),
                     graphql_value!({"error": "Directory not found"}),
                 );
                 return Err(err);
