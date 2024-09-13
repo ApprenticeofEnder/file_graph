@@ -994,6 +994,7 @@ dependencies = [
  "async-std",
  "base64 0.22.1",
  "env_logger",
+ "gql_client",
  "graphql_client",
  "home",
  "juniper",
@@ -1209,6 +1210,18 @@ dependencies = [
  "futures-core",
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "gql_client"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e57f4862d3e5cd4ffe8df03fa2137e620e33578bbc1895e6f8f569630e17b1db"
+dependencies = [
+ "log",
+ "reqwest 0.11.27",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

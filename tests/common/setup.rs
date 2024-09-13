@@ -2,7 +2,6 @@ use std::sync::{Once, OnceLock};
 
 use actix_web::dev::ServerHandle;
 use file_graph::{init_logger, init_server};
-use reqwest::RequestBuilder;
 use rstest::*;
 
 static INIT: Once = Once::new();
@@ -16,13 +15,7 @@ pub fn setup() -> () {
 #[fixture]
 pub async fn test_server() -> &'static ServerHandle {
     static SERVER: OnceLock<ServerHandle> = OnceLock::new();
-    // SERVER.get_or_init(|| {
-    //     let server = init_test_server();
-    //     thread::sleep(Duration::from_secs(1));
-    //     println!("Thread started.");
-    //     server
-    // })
-    SERVER.get_or_init(|| {
+    let handler = SERVER.get_or_init(|| {
         init_logger();
 
         let server = init_server().unwrap();
@@ -32,12 +25,7 @@ pub async fn test_server() -> &'static ServerHandle {
             server_spawner.await.unwrap();
         });
         server_handler
-    })
-}
-
-#[fixture]
-pub fn req() -> RequestBuilder {
-    let client = reqwest::Client::new();
-    let res = client.post("http://localhost:8080/graphql");
-    res
+    });
+    handler.resume().await;
+    handler
 }

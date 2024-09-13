@@ -1,6 +1,7 @@
 query ReadFile($path: String!) {
   readFile(path: $path) {
-    name
+    fileName
+    contents
     path
   }
 }

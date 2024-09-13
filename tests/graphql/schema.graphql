@@ -22,10 +22,10 @@ type GqlDirentDTO {
   error: String
 }
 
-"Dirent"
+"File"
 type GqlFile {
   contents: String!
-  name: String!
+  fileName: String!
   metadata: GqlFileMetadata
   path: String!
 }

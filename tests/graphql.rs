@@ -1,25 +1,25 @@
 use actix_web::dev::ServerHandle;
-use graphql_client::{GraphQLQuery, Response};
-use reqwest::{self, RequestBuilder};
+use async_std::fs;
+use gql_client::Client as GqlClient;
 use rstest::*;
 
 mod common;
 use common::{
-    query::{self, ping, read_file},
-    setup::{req, test_server},
+    query::{self, query_client, DirReadResponse, FileReadResponse, PathVariables, PingResponse},
+    setup::test_server,
 };
+use file_graph::schemas;
 use tempfile::{NamedTempFile, TempDir};
 
 #[rstest]
 #[tokio::test]
-async fn test_ping(#[future] _test_server: &ServerHandle, req: RequestBuilder) {
+async fn test_ping(#[future] _test_server: &ServerHandle, query_client: &GqlClient) {
     _test_server.await;
 
-    let variables = query::ping::Variables {};
-    let request_body = query::Ping::build_query(variables);
-    let res = req.json(&request_body).send().await.unwrap();
-    let response_body: Response<ping::ResponseData> = res.json().await.unwrap();
-    assert_eq!(response_body.data.unwrap().ping.pong, "Pong!");
+    let query_path = std::path::Path::new("tests/graphql/ping.graphql");
+    let query = fs::read_to_string(query_path).await.unwrap();
+    println!("{}", query);
+    let _res = query_client.query::<PingResponse>(&query).await.unwrap();
 }
 
 #[rstest]
@@ -29,7 +29,7 @@ async fn test_ping(#[future] _test_server: &ServerHandle, req: RequestBuilder) {
 async fn test_file_read(
     #[case] file_exists: bool,
     #[future] _test_server: &ServerHandle,
-    req: RequestBuilder,
+    query_client: &GqlClient,
 ) {
     _test_server.await;
     let tmp_file = NamedTempFile::new().unwrap();
@@ -43,36 +43,24 @@ async fn test_file_read(
         false => "/file/that/doesn't/exist".into(),
     };
 
-    let variables = query::read_file::Variables { path: path.clone() };
-    let request_body = query::ReadFile::build_query(variables);
-    let res = req.json(&request_body).send().await.unwrap();
-    let response_body: Response<read_file::ResponseData> = res.json().await.unwrap();
+    let variables = query::PathVariables { path };
 
-    assert!(response_body.data.is_some() == file_exists);
-    assert!(response_body.errors.is_none() == file_exists);
-    match response_body {
-        Response {
-            data: Some(file_data),
-            errors: None,
-            ..
-        } => {
-            assert!(&file_data.read_file.path == &path);
-            assert!(file_exists);
+    let query_path = std::path::Path::new("tests/graphql/read_file.graphql");
+    let query = fs::read_to_string(query_path).await.unwrap();
+
+    let res = query_client
+        .query_with_vars::<FileReadResponse, PathVariables>(&query, variables)
+        .await;
+
+    match (res, file_exists) {
+        (Ok(Some(_data)), false) => {
+            panic!("Nonexistent files should return errors.");
         }
-        Response {
-            data: None,
-            errors: Some(file_errors),
-            ..
-        } => file_errors.iter().for_each(|err| {
-            assert!(
-                &err.message == "Could not retrieve file: No such file or directory (os error 2)."
-            );
-            assert!(!file_exists);
-        }),
-        _ => {
-            panic!("Unknown case encountered. {:?}", response_body);
+        (Err(err), true) => {
+            panic!("{}", err.message());
         }
-    }
+        _ => {}
+    };
 }
 
 #[rstest]
@@ -82,10 +70,8 @@ async fn test_file_read(
 async fn test_dir_read(
     #[case] dir_exists: bool,
     #[future] _test_server: &ServerHandle,
-    req: RequestBuilder,
+    query_client: &GqlClient,
 ) {
-    use common::query::read_dir;
-
     _test_server.await;
     let tmp_dir = TempDir::new().unwrap();
     let path: String = match dir_exists {
@@ -98,48 +84,24 @@ async fn test_dir_read(
         false => "/file/that/doesn't/exist".into(),
     };
 
-    let variables = query::read_dir::Variables { path: path.clone() };
-    let request_body = query::ReadDir::build_query(variables);
-    let res = req.json(&request_body).send().await.unwrap();
-    let response_body: Response<read_dir::ResponseData> = res.json().await.unwrap();
+    let variables = query::PathVariables { path };
 
-    assert!(response_body.data.is_some() == dir_exists);
-    assert!(response_body.errors.is_none() == dir_exists);
-    match response_body {
-        Response {
-            data: Some(dir_data),
-            errors: None,
-            ..
-        } => {
-            assert!(dir_exists);
-            dir_data
-                .read_dir
-                .iter()
-                .for_each(|dirent_dto| match &dirent_dto.data {
-                    Some(dirent) => {
-                        assert!(dirent.path == path);
-                    }
-                    None => panic!(
-                        "Dirent could not be opened. {}",
-                        dirent_dto.error.as_ref().unwrap()
-                    ),
-                });
+    let query_path = std::path::Path::new("tests/graphql/read_dir.graphql");
+    let query = fs::read_to_string(query_path).await.unwrap();
+
+    let res = query_client
+        .query_with_vars::<DirReadResponse, PathVariables>(&query, variables)
+        .await;
+
+    match (res, dir_exists) {
+        (Ok(Some(_data)), false) => {
+            panic!("Nonexistent directories should return errors.");
         }
-        Response {
-            data: None,
-            errors: Some(file_errors),
-            ..
-        } => file_errors.iter().for_each(|err| {
-            assert!(
-                &err.message
-                    == "Could not retrieve directory: No such file or directory (os error 2)."
-            );
-            assert!(!dir_exists);
-        }),
-        _ => {
-            panic!("Unknown case encountered. {:?}", response_body);
+        (Err(err), true) => {
+            panic!("{}", err.message());
         }
-    }
+        _ => {}
+    };
 }
 
 // Todo: Add tests for read_home

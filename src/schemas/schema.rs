@@ -4,15 +4,16 @@ use juniper::{
     graphql_value, EmptyMutation, EmptySubscription, FieldError, FieldResult, GraphQLObject,
     RootNode,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::schemas::dto::GqlDirentDTO;
 use crate::schemas::fs::GqlFile;
 
 use super::fs::osstring_to_string;
 
-#[derive(GraphQLObject)]
+#[derive(GraphQLObject, Serialize, Deserialize)]
 #[graphql(description = "Ping")]
-struct Ping {
+pub struct Ping {
     pong: String,
 }
 pub struct QueryRoot;

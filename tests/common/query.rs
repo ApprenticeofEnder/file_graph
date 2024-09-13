@@ -1,25 +1,35 @@
-use graphql_client::GraphQLQuery;
+use crate::schemas::fs::GqlFile;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "tests/graphql/schema.graphql",
-    query_path = "tests/graphql/ping.graphql",
-    response_derives = "Debug"
-)]
-pub struct Ping;
+use file_graph::schemas::{self, dto::GqlDirentDTO};
+use gql_client::Client;
+use rstest::fixture;
+use serde::{Deserialize, Serialize};
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "tests/graphql/schema.graphql",
-    query_path = "tests/graphql/read_file.graphql",
-    response_derives = "Debug"
-)]
-pub struct ReadFile;
+#[derive(Serialize)]
+pub struct PathVariables {
+    pub path: String,
+}
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "tests/graphql/schema.graphql",
-    query_path = "tests/graphql/read_dir.graphql",
-    response_derives = "Debug"
-)]
-pub struct ReadDir;
+#[derive(Deserialize, Serialize)]
+pub struct PingResponse {
+    ping: schemas::schema::Ping,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct FileReadResponse {
+    #[serde(rename = "readFile")]
+    read_file: GqlFile,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct DirReadResponse {
+    #[serde(rename = "readDir")]
+    read_dir: Vec<GqlDirentDTO>,
+}
+
+#[fixture]
+#[once]
+pub fn query_client() -> Client {
+    let client = Client::new("http://localhost:8080/graphql");
+    client
+}

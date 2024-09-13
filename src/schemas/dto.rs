@@ -1,10 +1,11 @@
 use std::fs;
 
 use juniper::GraphQLObject;
+use serde::{Deserialize, Serialize};
 
 use crate::schemas::fs::GqlDirent;
 
-#[derive(GraphQLObject)]
+#[derive(GraphQLObject, Serialize, Deserialize)]
 #[graphql(description = "Dirent DTO")]
 pub struct GqlDirentDTO {
     data: Option<GqlDirent>,

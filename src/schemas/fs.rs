@@ -3,16 +3,18 @@ use std::{ffi::OsString, fs};
 use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 use juniper::{GraphQLEnum, GraphQLObject};
 use num::ToPrimitive;
+use serde::{Deserialize, Serialize};
 
 pub fn osstring_to_string(path: &OsString) -> String {
     return path.to_string_lossy().into_owned();
 }
 
-#[derive(GraphQLObject)]
+#[derive(Debug, Serialize, Deserialize, GraphQLObject)]
 #[graphql(description = "Dirent")]
 pub struct GqlDirent {
     path: String,
     metadata: Option<GqlFileMetadata>,
+    #[serde(rename = "fileName")]
     file_name: String,
 }
 
@@ -36,11 +38,12 @@ impl From<fs::DirEntry> for GqlDirent {
     }
 }
 
-#[derive(GraphQLObject)]
-#[graphql(description = "Dirent")]
+#[derive(Debug, Serialize, Deserialize, GraphQLObject)]
+#[graphql(description = "File")]
 pub struct GqlFile {
     contents: String,
-    name: String,
+    #[serde(rename = "fileName")]
+    file_name: String,
     metadata: Option<GqlFileMetadata>,
     path: String,
 }
@@ -57,7 +60,7 @@ impl GqlFile {
             }
         };
 
-        let name = match full_path.file_name() {
+        let file_name = match full_path.file_name() {
             Some(name) => osstring_to_string(&name.into()),
             None => {
                 log::warn!("Unable to retrieve file name for {}.", path);
@@ -81,14 +84,14 @@ impl GqlFile {
 
         Ok(Self {
             contents,
-            name,
+            file_name,
             metadata,
             path,
         })
     }
 }
 
-#[derive(GraphQLEnum)]
+#[derive(Debug, Serialize, Deserialize, GraphQLEnum)]
 enum GqlFileType {
     File,
     Directory,
@@ -96,11 +99,13 @@ enum GqlFileType {
     Unsupported,
 }
 
-#[derive(GraphQLObject)]
+#[derive(Debug, Serialize, Deserialize, GraphQLObject)]
 #[graphql(description = "Metadata")]
 pub struct GqlFileMetadata {
+    #[serde(rename = "fileType")]
     file_type: GqlFileType,
     size_kb: i32,
+    #[serde(rename = "readOnly")]
     read_only: bool,
     modified: f64,
     // TODO: This is going to be a problem in 2038. No easy fix for now.
