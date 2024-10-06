@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from "react";
 
-import RelationGraph from "relation-graph-react";
-
 function genRandomTree(N = 10, reverse = false) {
   return {
     rootId: "0",

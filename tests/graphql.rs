@@ -13,8 +13,8 @@ use tempfile::{NamedTempFile, TempDir};
 
 #[rstest]
 #[tokio::test]
-async fn test_ping(#[future] _test_server: &ServerHandle, query_client: &GqlClient) {
-    _test_server.await;
+async fn test_ping(#[future] test_server: &ServerHandle, query_client: &GqlClient) {
+    test_server.await;
 
     let query_path = std::path::Path::new("tests/graphql/ping.graphql");
     let query = fs::read_to_string(query_path).await.unwrap();
@@ -28,10 +28,10 @@ async fn test_ping(#[future] _test_server: &ServerHandle, query_client: &GqlClie
 #[tokio::test]
 async fn test_file_read(
     #[case] file_exists: bool,
-    #[future] _test_server: &ServerHandle,
+    #[future] test_server: &ServerHandle,
     query_client: &GqlClient,
 ) {
-    _test_server.await;
+    test_server.await;
     let tmp_file = NamedTempFile::new().unwrap();
     let path: String = match file_exists {
         true => tmp_file
@@ -69,10 +69,10 @@ async fn test_file_read(
 #[tokio::test]
 async fn test_dir_read(
     #[case] dir_exists: bool,
-    #[future] _test_server: &ServerHandle,
+    #[future] test_server: &ServerHandle,
     query_client: &GqlClient,
 ) {
-    _test_server.await;
+    test_server.await;
     let tmp_dir = TempDir::new().unwrap();
     let path: String = match dir_exists {
         true => tmp_dir
